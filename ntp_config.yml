@@ -1,0 +1,28 @@
+---
+- name: "PLAY 1: manage NTP config"
+  hosts: routers
+  tasks:
+    - name: "TASK 0: Check variables first"
+      assert:
+        that:
+          - "ntp_server1 is defined"
+          - "ntp_server2 is defined"
+          # make sure they are valid IPs
+          - "ntp_server1 | ipv4 == ntp_server1"
+          - "ntp_server2 | ipv4 == ntp_server2"
+        fail_msg: "Problem wih ntp_servers .... check vars"
+        success_msg: "Okie Dokie mate!"
+
+    - name: "TASK 1: Log into routers and apply config"
+      ios_config:
+        lines:
+          - "ntp authenticate"
+          - "ntp logging"
+          - "ntp server {{ ntp_server1 }}"
+          - "ntp server {{ ntp_server2 }}"
+      register: ntp_updates
+
+    - name: "TASK 2: Print changes if they occur"
+      debug:
+        var: ntp_updates.commands
+      when: "ntp_updates.commands is defined"
